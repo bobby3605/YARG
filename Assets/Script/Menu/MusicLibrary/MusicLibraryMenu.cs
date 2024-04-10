@@ -459,11 +459,13 @@ namespace YARG.Menu.MusicLibrary
 
         private void Back()
         {
+            /*
             if (_searchField.IsSearching)
             {
                 _searchField.ClearFilterQueries();
                 return;
             }
+            */
 
             _previewCanceller?.Cancel();
             _previewContext?.Dispose();

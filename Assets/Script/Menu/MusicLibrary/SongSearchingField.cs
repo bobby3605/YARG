@@ -105,7 +105,7 @@ namespace YARG.Menu.MusicLibrary
 
         public IReadOnlyList<SongCategory> Refresh(SongAttribute sort)
         {
-            _currentSearchText = _searchField.text = string.Empty;
+            //_currentSearchText = _searchField.text = string.Empty;
             return _searchContext.Refresh(sort);
         }
 
@@ -177,7 +177,7 @@ namespace YARG.Menu.MusicLibrary
         {
             if (Keyboard.current.escapeKey.wasPressedThisFrame)
             {
-                ClearFilterQueries();
+                //ClearFilterQueries();
             }
         }
 
@@ -186,7 +186,7 @@ namespace YARG.Menu.MusicLibrary
             var button = _searchFilters.ActiveButton;
             if (button == null)
             {
-                ClearSearchQuery(_currentSearchFilter);
+                //ClearSearchQuery(_currentSearchFilter);
                 return;
             }
 
