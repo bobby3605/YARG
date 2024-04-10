@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using YARG.Core;
 using YARG.Core.Song;
+using UnityEngine;
 
 namespace YARG.Song
 {
@@ -356,9 +357,19 @@ namespace YARG.Song
 
         private static List<SongCategory> FilterInstruments(IReadOnlyList<SongCategory> searchList, string argument)
         {
+                if(false){
             var instruments = ((Instrument[]) Enum.GetValues(typeof(Instrument)))
                 .Select(ins => ins.ToString())
-                .Where(str => str.Contains(argument, StringComparison.OrdinalIgnoreCase))
+                .Where(str => {
+                        foreach (var arg in argument.Split(",")) { 
+                            // return true if the instrument string matches one of the arguments
+                            if(str.Contains(arg, StringComparison.OrdinalIgnoreCase)){
+                                return true;
+                            }
+                        }
+                        // return false if no matches
+                        return false;
+                    })
                 .ToArray();
 
             List<SongCategory> result = new();
@@ -369,7 +380,105 @@ namespace YARG.Song
                     result.Add(node);
                 }
             }
-            return result;
+            
+            // Calculate intersection of songs in each node group, where a node group is what argument.Split(",") it matches with
+            // Then update node.Category to contain all of the categories that intersect
+
+            // FIXME:
+            // Do something better than songEntry.ToString()
+            Dictionary<string, uint> songCount = new();
+            int totalCategoryCount = result.Count;
+
+            // calculate the total count of each song in each node
+            // if the final count of a song == number of nodes/categories, then it intersects all categories
+
+            // FIXME:
+            // NOT ALL CATEGORIES IN RESULT,
+            // ONLY PER SEARCH ITEM CATEGORIES
+            // Take union set of each search item category,
+            // then iterate over that
+            // maybe move argument.Split to have a greater scope?
+            foreach (var node in result){
+                foreach (var song in node.Songs){
+                    uint count = 1;
+                    // If the song hash already exists in the dictionary,
+                    // then add 1 to the count,
+                    // otherwise, set the count of that hash to 1
+                    if(songCount.TryGetValue(song.ToString(), out count)){
+                        ++count;
+                    } 
+                    songCount[song.ToString()] = count;
+                }
+            }
+
+            List<SongEntry> finalEntries = new();
+            foreach (SongEntry song in result[0].Songs) {
+                if(songCount[song.ToString()] == totalCategoryCount) {
+                    finalEntries.Add(song);
+                } 
+            }
+
+            string finalCategory = String.Join(" ", instruments);
+
+            SongCategory finalResult = new SongCategory(finalCategory, finalEntries);
+
+            List<SongCategory> finalCategories = new();
+            finalCategories.Add(finalResult);
+
+            return finalCategories;
+                } else {
+                    return null;
+
+/*
+            // ALTERNATIVE:
+            // Iterate over each song entry in each category,
+            // check if it passes HasInstrument for each instrument
+            // if it does, then add it to the final result
+            string[][] instrumentGroups = new();
+            string[] instrumentEnum = Enum.GetValues(typeof(Instrument)).Select(ins => ins.ToString()).ToArray();
+            foreach (var arg in argument.Split(",")) { 
+                string[] instruments = new();
+                foreach(string insString in instrumentEnum) {
+                    if(insString.Contains(arg, StringComparison.OrdinalIgnoreCase)){
+                        instruments.Add(insString);
+                    }
+                }
+                instrumentGroups.Add(instruments);
+                List<SongEntry> argEntries = new();
+                foreach (var node in searchList) {
+                    if(instruments.Contains(node.Category)){
+                        argEntries.Add(node.Songs);
+                    }
+                }
+            }
+
+
+
+                    List<SongEntry> finalEntries = new();
+                    foreach (var node in searchList) {
+                        if(instruments.Contains(node.Category)){
+                        foreach(SongEntry song in node.Songs) {
+                            hasAll = true;
+                            foreach(string instrumentStr in instruments){
+                                Enum.TryParse(instrumentStr, out Instrument ins);
+                                // FIXME:
+                                // Group by argument.Split(",")
+                                if(!song.HasInstrument(ins)){
+                                    hasAll = false;
+                                }
+                            }
+                            if(hasAll){
+                                finalEntries.Add(song);
+                            }
+                        }
+                    }
+                    SongCategory finalCategory = new SongCategory(argument, finalEntries);
+                    List<SongCategory> finalList = new();
+                    finalList.Add(finalCategory);
+                    return finalCategory;
+            }
+            */
+                }
         }
 
         private static readonly string[] Articles =
